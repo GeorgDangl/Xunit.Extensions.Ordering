@@ -7,11 +7,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xunit.Extensions.Ordering",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9D090E5D-B6FB-4C3A-859B-BDFD946D23C2}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		CHANGELOG.md = CHANGELOG.md
+		GitVersion.yml = GitVersion.yml
+		Jenkinsfile = Jenkinsfile
+		LICENSE = LICENSE
 		logo.png = logo.png
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xunit.Extensions.Ordering.Tests", "Xunit.Extensions.Ordering.Tests\Xunit.Extensions.Ordering.Tests.csproj", "{A181E655-440F-411E-8CCB-C46ACD803D40}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{2E6B9218-173F-4DA4-9E8B-FF9620B50FBE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +34,8 @@ Global
 		{A181E655-440F-411E-8CCB-C46ACD803D40}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A181E655-440F-411E-8CCB-C46ACD803D40}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A181E655-440F-411E-8CCB-C46ACD803D40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E6B9218-173F-4DA4-9E8B-FF9620B50FBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E6B9218-173F-4DA4-9E8B-FF9620B50FBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

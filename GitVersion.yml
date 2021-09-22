@@ -1,0 +1,21 @@
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+mode: Mainline
+
+branches:
+  master:
+    regex: (origin/)?master
+  develop:
+    increment: Patch
+    tag: beta
+    regex: (origin/)?dev(elop)?(ment)?$
+  release:
+    regex: (origin/)?releases?[/-]
+  feature:
+    regex: (origin/)?features?[/-]
+  pull-request:
+    regex: (origin/)?(pull|pull\-requests|pr)[/-]
+  hotfix:
+    regex: (origin/)?hotfix(es)?[/-]
+  support:
+    regex: (origin/)?support[/-]
