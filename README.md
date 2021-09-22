@@ -2,7 +2,7 @@
 
 [![Build Status](https://jenkins.dangl.me/buildStatus/icon?job=GeorgDangl%2FXunit.Extensions.Ordering%2Fdevelop)](https://jenkins.dangl.me/job/GeorgDangl/job/Xunit.Extensions.Ordering/job/develop/)
 
-This project is a fork, it's been updated to work correctly with never frameworks.
+This project is a fork, it's been updated to work correctly with newer frameworks.
 
 **Nuget:** https://www.nuget.org/packages/Dangl.Xunit.Extensions.Ordering/
 
