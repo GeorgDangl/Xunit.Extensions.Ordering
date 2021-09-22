@@ -19,6 +19,8 @@
 	  <IsPackable>true</IsPackable>
 	  <LangVersion>latest</LangVersion>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <SignAssembly>true</SignAssembly>
+	  <AssemblyOriginatorKeyFile>Xunit.Extensions.Ordering.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
