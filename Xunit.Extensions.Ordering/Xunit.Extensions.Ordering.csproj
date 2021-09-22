@@ -8,7 +8,6 @@
     <Authors>Tomáš Zeman, Georg Dangl</Authors>
     <Description>Extensions for ordered testing with Xunit. Full support for ordering at all levels - test collections, test classes and test cases. Support for AssemblyFixture including IMessageSink injection and IAsyncLifetime. Supports .NET Core 1.x, .NET Core 2.x. and .NET 4.5.2+</Description>
     <RepositoryUrl>https://github.com/GeorgDangl/Xunit.Extensions.Ordering</RepositoryUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageIconUrl>https://github.com/GeorgDangl/Xunit.Extensions.Ordering/raw/master/logo.png</PackageIconUrl>
     <Copyright>Tomáš Zeman, Georg Dangl 2021</Copyright>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
