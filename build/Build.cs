@@ -19,11 +19,13 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using static Nuke.Common.ChangeLog.ChangelogTasks;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.IO.XmlTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using static Nuke.Common.Tools.ReportGenerator.ReportGeneratorTasks;
+using static Nuke.GitHub.ChangeLogExtensions;
 using static Nuke.GitHub.GitHubTasks;
 
 [CheckBuildProjectConfigurations]
@@ -55,6 +57,7 @@ class Build : NukeBuild
     [KeyVaultSecret] string GitHubAuthenticationToken;
 
     AbsolutePath OutputDirectory => RootDirectory / "output";
+    string ChangeLogFile => RootDirectory / "CHANGELOG.md";
 
     Target Clean => _ => _
         .Executes(() =>
@@ -156,9 +159,13 @@ class Build : NukeBuild
         .DependsOn(Compile)
         .Executes(() =>
         {
+            var changeLog = GetCompleteChangeLog(ChangeLogFile)
+                .EscapeStringPropertyForMsBuild();
+
             DotNetPack(x => x
                 .SetProcessArgumentConfigurator(a => a.Add("/nodeReuse:false"))
                 .SetConfiguration(Configuration)
+                .SetPackageReleaseNotes(changeLog)
                 .SetDescription("Dangl.Xunit.Extensions.Ordering - www.dangl-it.com")
                 .SetTitle("Dangl.Xunit.Extensions.Ordering - www.dangl-it.com")
                 .EnableNoBuild()
@@ -202,12 +209,18 @@ class Build : NukeBuild
         {
             var releaseTag = $"v{GitVersion.MajorMinorPatch}";
 
+            var changeLogSectionEntries = ExtractChangelogSectionNotes(ChangeLogFile);
+            var latestChangeLog = changeLogSectionEntries
+                .Aggregate((c, n) => c + Environment.NewLine + n);
+            var completeChangeLog = $"## {releaseTag}" + Environment.NewLine + latestChangeLog;
+
             var repositoryInfo = GetGitHubRepositoryInfo(GitRepository);
             var nuGetPackages = GlobFiles(OutputDirectory, "*.nupkg").NotEmpty().ToArray();
 
             await PublishRelease(x => x
                     .SetArtifactPaths(nuGetPackages)
                     .SetCommitSha(GitVersion.Sha)
+                    .SetReleaseNotes(completeChangeLog)
                     .SetRepositoryName(repositoryInfo.repositoryName)
                     .SetRepositoryOwner(repositoryInfo.gitHubOwner)
                     .SetTag(releaseTag)
