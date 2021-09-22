@@ -29,7 +29,6 @@ using static Nuke.GitHub.ChangeLogExtensions;
 using static Nuke.GitHub.GitHubTasks;
 
 [CheckBuildProjectConfigurations]
-[ShutdownDotNetAfterServerBuild]
 class Build : NukeBuild
 {
     public static int Main() => Execute<Build>(x => x.Compile);
