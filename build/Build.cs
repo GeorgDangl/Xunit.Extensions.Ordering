@@ -7,11 +7,13 @@ using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.AzureKeyVault.Attributes;
 using Nuke.Common.Tools.Coverlet;
+using Nuke.Common.Tools.DocFX;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.ReportGenerator;
 using Nuke.Common.Utilities.Collections;
 using Nuke.GitHub;
+using Nuke.WebDocu;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,11 +24,14 @@ using System.Xml.XPath;
 using static Nuke.Common.ChangeLog.ChangelogTasks;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
+using static Nuke.Common.IO.TextTasks;
 using static Nuke.Common.IO.XmlTasks;
+using static Nuke.Common.Tools.DocFX.DocFXTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using static Nuke.Common.Tools.ReportGenerator.ReportGeneratorTasks;
 using static Nuke.GitHub.ChangeLogExtensions;
 using static Nuke.GitHub.GitHubTasks;
+using static Nuke.WebDocu.WebDocuTasks;
 
 [CheckBuildProjectConfigurations]
 class Build : NukeBuild
@@ -56,7 +61,12 @@ class Build : NukeBuild
     [KeyVaultSecret] string GitHubAuthenticationToken;
 
     AbsolutePath OutputDirectory => RootDirectory / "output";
-    string ChangeLogFile => RootDirectory / "CHANGELOG.md";
+    AbsolutePath ChangeLogFile => RootDirectory / "CHANGELOG.md";
+    AbsolutePath DocsDirectory => RootDirectory / "docs";
+    AbsolutePath DocFxFile => RootDirectory / "docs" / "docfx.json";
+
+    [KeyVaultSecret] readonly string DocuBaseUrl;
+    [KeyVaultSecret("DanglXunitExtensionsOrdering-DocuApiKey")] readonly string DocuApiKey;
 
     Target Clean => _ => _
         .Executes(() =>
@@ -134,25 +144,73 @@ class Build : NukeBuild
 
             PrependFrameworkToTestresults();
 
-            // This is the report that's pretty and visualized in Jenkins
-            ReportGenerator(c => c
-                .SetFramework("netcoreapp3.0")
-                .SetReports(OutputDirectory / "*_coverage*.xml")
-                .SetTargetDirectory(OutputDirectory / "CoverageReport"));
-
             // Merge coverage reports, otherwise they might not be completely
             // picked up by Jenkins
             ReportGenerator(c => c
-                .SetFramework("netcoreapp3.0")
-                .SetReports(OutputDirectory / "*_coverage*.xml")
+                .SetFramework("net5.0")
+                .SetReports(OutputDirectory / "*_coverage.*.xml")
                 .SetTargetDirectory(OutputDirectory)
                 .SetReportTypes(ReportTypes.Cobertura));
 
+            MakeSourceEntriesRelativeInCoberturaFormat(OutputDirectory / "Cobertura.xml");
+
             if (hasFailedTests)
             {
-                ControlFlow.Fail("Some tests have failed");
+                Assert.Fail("Some tests have failed");
             }
         });
+
+    private void MakeSourceEntriesRelativeInCoberturaFormat(string coberturaReportPath)
+    {
+        var originalText = ReadAllText(coberturaReportPath);
+        var xml = XDocument.Parse(originalText);
+
+        var xDoc = XDocument.Load(coberturaReportPath);
+
+        var sourcesEntry = xDoc
+            .Root
+            .Elements()
+            .Where(e => e.Name.LocalName == "sources")
+            .Single();
+
+        string basePath;
+        if (sourcesEntry.HasElements)
+        {
+            var elements = sourcesEntry.Elements().ToList();
+            basePath = elements
+                .Select(e => e.Value)
+                .OrderBy(p => p.Length)
+                .First();
+            foreach (var element in elements)
+            {
+                if (element.Value != basePath)
+                {
+                    element.Remove();
+                }
+            }
+        }
+        else
+        {
+            basePath = sourcesEntry.Value;
+        }
+
+        Serilog.Log.Information($"Normalizing Cobertura report to base path: \"{basePath}\"");
+
+        var filenameAttributes = xDoc
+            .Root
+            .Descendants()
+            .Where(d => d.Attributes().Any(a => a.Name.LocalName == "filename"))
+            .Select(d => d.Attributes().First(a => a.Name.LocalName == "filename"));
+        foreach (var filenameAttribute in filenameAttributes)
+        {
+            if (filenameAttribute.Value.StartsWith(basePath))
+            {
+                filenameAttribute.Value = filenameAttribute.Value.Substring(basePath.Length);
+            }
+        }
+
+        xDoc.Save(coberturaReportPath);
+    }
 
     Target Pack => _ => _
         .DependsOn(Compile)
@@ -171,7 +229,7 @@ class Build : NukeBuild
                 .SetOutputDirectory(OutputDirectory)
                 .SetVersion(GitVersion.NuGetVersion));
         });
-
+    
     Target Push => _ => _
         .DependsOn(Pack)
         .Requires(() => PublicMyGetSource)
@@ -180,7 +238,10 @@ class Build : NukeBuild
         .Requires(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
-            GlobFiles(OutputDirectory, "*.nupkg").NotEmpty()
+            var packages = GlobFiles(OutputDirectory, "*.nupkg").ToList();
+            Assert.NotEmpty(packages);
+
+            packages
                 .Where(x => !x.EndsWith("symbols.nupkg"))
                 .ForEach(x =>
                 {
@@ -214,7 +275,8 @@ class Build : NukeBuild
             var completeChangeLog = $"## {releaseTag}" + Environment.NewLine + latestChangeLog;
 
             var repositoryInfo = GetGitHubRepositoryInfo(GitRepository);
-            var nuGetPackages = GlobFiles(OutputDirectory, "*.nupkg").NotEmpty().ToArray();
+            var nuGetPackages = GlobFiles(OutputDirectory, "*.nupkg").ToArray();
+            Assert.NotEmpty(nuGetPackages);
 
             await PublishRelease(x => x
                     .SetArtifactPaths(nuGetPackages)
@@ -293,5 +355,51 @@ class Build : NukeBuild
         var startIndex = name.LastIndexOf('-');
         name = name.Substring(startIndex + 1);
         return name;
+    }
+
+    Target BuildDocFxMetadata => _ => _
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            DocFXMetadata(x => x
+                .SetProcessEnvironmentVariable("DOCFX_SOURCE_BRANCH_NAME", GitVersion.BranchName)
+                .SetProjects(DocFxFile));
+        });
+
+    Target BuildDocumentation => _ => _
+        .DependsOn(Clean)
+        .DependsOn(BuildDocFxMetadata)
+        .Executes(() =>
+        {
+            CopyFile(ChangeLogFile, DocsDirectory / "CHANGELOG.md");
+            CopyFile(RootDirectory / "README.md", DocsDirectory / "index.md");
+            DocFXBuild(x => x
+                .SetProcessEnvironmentVariable("DOCFX_SOURCE_BRANCH_NAME", GitVersion.BranchName)
+                .SetConfigFile(DocFxFile));
+            DeleteFile(DocsDirectory / "CHANGELOG.md");
+            DeleteFile(DocsDirectory / "index.md");
+        });
+
+    Target UploadDocumentation => _ => _
+        .DependsOn(BuildDocumentation)
+        .Requires(() => DocuApiKey)
+        .Requires(() => DocuBaseUrl)
+        .OnlyWhenDynamic(() => IsOnBranch("master") || IsOnBranch("develop"))
+        .Executes(() =>
+        {
+            var changeLog = GetCompleteChangeLog(ChangeLogFile);
+
+            WebDocu(s => s
+                .SetDocuBaseUrl(DocuBaseUrl)
+                .SetDocuApiKey(DocuApiKey)
+                .SetMarkdownChangelog(changeLog)
+                .SetSourceDirectory(OutputDirectory / "docs")
+                .SetVersion(GitVersion.NuGetVersion)
+                .SetSkipForVersionConflicts(true));
+        });
+
+    private bool IsOnBranch(string branchName)
+    {
+        return GitVersion.BranchName.Equals(branchName) || GitVersion.BranchName.Equals($"origin/{branchName}");
     }
 }
