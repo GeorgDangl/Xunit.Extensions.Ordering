@@ -150,7 +150,7 @@ class Build : NukeBuild
 
             if (hasFailedTests)
             {
-                ControlFlow.Fail("Some tests have failed");
+                Assert.Fail("Some tests have failed");
             }
         });
 
@@ -171,7 +171,7 @@ class Build : NukeBuild
                 .SetOutputDirectory(OutputDirectory)
                 .SetVersion(GitVersion.NuGetVersion));
         });
-
+    
     Target Push => _ => _
         .DependsOn(Pack)
         .Requires(() => PublicMyGetSource)
@@ -180,7 +180,10 @@ class Build : NukeBuild
         .Requires(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
-            GlobFiles(OutputDirectory, "*.nupkg").NotEmpty()
+            var packages = GlobFiles(OutputDirectory, "*.nupkg").ToList();
+            Assert.NotEmpty(packages);
+
+            packages
                 .Where(x => !x.EndsWith("symbols.nupkg"))
                 .ForEach(x =>
                 {
@@ -214,7 +217,8 @@ class Build : NukeBuild
             var completeChangeLog = $"## {releaseTag}" + Environment.NewLine + latestChangeLog;
 
             var repositoryInfo = GetGitHubRepositoryInfo(GitRepository);
-            var nuGetPackages = GlobFiles(OutputDirectory, "*.nupkg").NotEmpty().ToArray();
+            var nuGetPackages = GlobFiles(OutputDirectory, "*.nupkg").ToArray();
+            Assert.NotEmpty(nuGetPackages);
 
             await PublishRelease(x => x
                     .SetArtifactPaths(nuGetPackages)
