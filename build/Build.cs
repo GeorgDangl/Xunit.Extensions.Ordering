@@ -7,11 +7,13 @@ using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.AzureKeyVault.Attributes;
 using Nuke.Common.Tools.Coverlet;
+using Nuke.Common.Tools.DocFX;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.ReportGenerator;
 using Nuke.Common.Utilities.Collections;
 using Nuke.GitHub;
+using Nuke.WebDocu;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,10 +26,12 @@ using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.IO.PathConstruction;
 using static Nuke.Common.IO.TextTasks;
 using static Nuke.Common.IO.XmlTasks;
+using static Nuke.Common.Tools.DocFX.DocFXTasks;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using static Nuke.Common.Tools.ReportGenerator.ReportGeneratorTasks;
 using static Nuke.GitHub.ChangeLogExtensions;
 using static Nuke.GitHub.GitHubTasks;
+using static Nuke.WebDocu.WebDocuTasks;
 
 [CheckBuildProjectConfigurations]
 class Build : NukeBuild
@@ -57,7 +61,12 @@ class Build : NukeBuild
     [KeyVaultSecret] string GitHubAuthenticationToken;
 
     AbsolutePath OutputDirectory => RootDirectory / "output";
-    string ChangeLogFile => RootDirectory / "CHANGELOG.md";
+    AbsolutePath ChangeLogFile => RootDirectory / "CHANGELOG.md";
+    AbsolutePath DocsDirectory => RootDirectory / "docs";
+    AbsolutePath DocFxFile => RootDirectory / "docs" / "docfx.json";
+
+    [KeyVaultSecret] readonly string DocuBaseUrl;
+    [KeyVaultSecret("DanglXunitExtensionsOrdering-DocuApiKey")] readonly string DocuApiKey;
 
     Target Clean => _ => _
         .Executes(() =>
@@ -346,5 +355,51 @@ class Build : NukeBuild
         var startIndex = name.LastIndexOf('-');
         name = name.Substring(startIndex + 1);
         return name;
+    }
+
+    Target BuildDocFxMetadata => _ => _
+        .DependsOn(Restore)
+        .Executes(() =>
+        {
+            DocFXMetadata(x => x
+                .SetProcessEnvironmentVariable("DOCFX_SOURCE_BRANCH_NAME", GitVersion.BranchName)
+                .SetProjects(DocFxFile));
+        });
+
+    Target BuildDocumentation => _ => _
+        .DependsOn(Clean)
+        .DependsOn(BuildDocFxMetadata)
+        .Executes(() =>
+        {
+            CopyFile(ChangeLogFile, DocsDirectory / "CHANGELOG.md");
+            CopyFile(RootDirectory / "README.md", DocsDirectory / "index.md");
+            DocFXBuild(x => x
+                .SetProcessEnvironmentVariable("DOCFX_SOURCE_BRANCH_NAME", GitVersion.BranchName)
+                .SetConfigFile(DocFxFile));
+            DeleteFile(DocsDirectory / "CHANGELOG.md");
+            DeleteFile(DocsDirectory / "index.md");
+        });
+
+    Target UploadDocumentation => _ => _
+        .DependsOn(BuildDocumentation)
+        .Requires(() => DocuApiKey)
+        .Requires(() => DocuBaseUrl)
+        .OnlyWhenDynamic(() => IsOnBranch("master") || IsOnBranch("develop"))
+        .Executes(() =>
+        {
+            var changeLog = GetCompleteChangeLog(ChangeLogFile);
+
+            WebDocu(s => s
+                .SetDocuBaseUrl(DocuBaseUrl)
+                .SetDocuApiKey(DocuApiKey)
+                .SetMarkdownChangelog(changeLog)
+                .SetSourceDirectory(OutputDirectory / "docs")
+                .SetVersion(GitVersion.NuGetVersion)
+                .SetSkipForVersionConflicts(true));
+        });
+
+    private bool IsOnBranch(string branchName)
+    {
+        return GitVersion.BranchName.Equals(branchName) || GitVersion.BranchName.Equals($"origin/{branchName}");
     }
 }

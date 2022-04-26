@@ -18,6 +18,12 @@
           "type": "boolean",
           "description": "Indicates to continue a previously failed build attempt"
         },
+        "DocuApiKey": {
+          "type": "string"
+        },
+        "DocuBaseUrl": {
+          "type": "string"
+        },
         "GitHubAuthenticationToken": {
           "type": "string"
         },
@@ -92,13 +98,16 @@
           "items": {
             "type": "string",
             "enum": [
+              "BuildDocFxMetadata",
+              "BuildDocumentation",
               "Clean",
               "Compile",
               "Coverage",
               "Pack",
               "PublishGitHubRelease",
               "Push",
-              "Restore"
+              "Restore",
+              "UploadDocumentation"
             ]
           }
         },
@@ -112,13 +121,16 @@
           "items": {
             "type": "string",
             "enum": [
+              "BuildDocFxMetadata",
+              "BuildDocumentation",
               "Clean",
               "Compile",
               "Coverage",
               "Pack",
               "PublishGitHubRelease",
               "Push",
-              "Restore"
+              "Restore",
+              "UploadDocumentation"
             ]
           }
         },

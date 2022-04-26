@@ -52,7 +52,7 @@ pipeline {
         }
         stage ('Deploy') {
             steps {
-                powershell './build.ps1 Push+PublishGitHubRelease'
+                powershell './build.ps1 Push+PublishGitHubRelease+UploadDocumentation'
             }
         }
     }
