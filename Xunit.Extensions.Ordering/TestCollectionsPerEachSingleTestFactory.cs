@@ -62,10 +62,8 @@ namespace Xunit.Extensions.Ordering
                             xunitTestCase.TestMethodArguments));
                         break;
 
-                    // TODO If you use custom attribute, you may need to add cases here
-
                     default:
-                        throw new ArgumentOutOfRangeException("Test case " + testCase.GetType() + " not supported");
+                        throw new ArgumentOutOfRangeException("Test case " + testCase.GetType() + " not supported, please update TestCollectionsPerEachSingleTestFactory");
                 }
             }
 
