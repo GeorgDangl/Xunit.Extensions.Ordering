@@ -139,7 +139,7 @@ class Build : NukeBuild
             // picked up by Jenkins
             ReportGenerator(c => c
                 .SetFramework("net5.0")
-                .SetReports(OutputDirectory / "*_coverage.xml")
+                .SetReports(OutputDirectory / "*_coverage.*.xml")
                 .SetTargetDirectory(OutputDirectory)
                 .SetReportTypes(ReportTypes.Cobertura));
 
