@@ -6,6 +6,8 @@ This project is a fork, it's been updated to work correctly with newer framework
 
 **Nuget:** https://www.nuget.org/packages/Dangl.Xunit.Extensions.Ordering/
 
+Additionally, there's now also a new test framework: `Xunit.Extensions.Ordering.ParallelByClassTestFramework`. This has the same behaviour as the original one, but parallelizes all tests inside single classes as well. It respects explicit `Collection` attributes, but otherwise places each single test in a collection of it's own for maximized parallelization.
+
 ---
 
 ## Original Readme
@@ -68,6 +70,7 @@ You can order test classes in collections by adding `Order` attribute but you ha
 ```csharp
 using Xunit;
 
+// You can also use Xunit.Extensions.Ordering.ParallelByClassTestFramework
 [assembly: TestFramework("Xunit.Extensions.Ordering.TestFramework", "Xunit.Extensions.Ordering")]
 ```
 ```csharp
