@@ -1,6 +1,7 @@
 # Dangl.Xunit.Extensions.Ordering
 
-[![Build Status](https://jenkins.dangl.me/buildStatus/icon?job=GeorgDangl%2FXunit.Extensions.Ordering%2Fdevelop)](https://jenkins.dangl.me/job/GeorgDangl/job/Xunit.Extensions.Ordering/job/develop/)
+[![Build Status](https://jenkins.dangl.me/buildStatus/icon?job=GeorgDangl%2FXunit.Extensions.Ordering%2Fdevelop)](https://jenkins.dangl.me/job/GeorgDangl/job/Xunit.Extensions.Ordering/job/develop/)  
+[Documentation on Dangl**Docu**](https://docs.dangl-it.com/Projects/Dangl.Xunit.Extensions.Ordering)
 
 This project is a fork, it's been updated to work correctly with newer frameworks.
 
