@@ -121,12 +121,12 @@ class Build : NukeBuild
                             return targetFrameworks.Select(targetFramework => cc
                                 // Coverage data is only collected for .NET Core or .NET 5 and newer
                                 .When(!targetFramework.StartsWith("net4"), ccc => ccc
-                                    .EnableCollectCoverage()
-                                    .SetCoverletOutputFormat(CoverletOutputFormat.cobertura)
-                                    .SetCoverletOutput($"{OutputDirectory / projectName}_coverage.xml")
+                                    .SetDataCollector("XPlat Code Coverage")
+                                    .SetResultsDirectory(OutputDirectory)
+                                    .AddRunSetting("DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format", "cobertura")
+                                    .AddRunSetting("DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include", "[Xunit.Extensions.Ordering*]*")
+                                    .AddRunSetting("DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByAttribute", "Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute")
                                     .SetProcessArgumentConfigurator(a => a
-                                        .Add($"/p:Include=[Xunit.Extensions.Ordering*]*")
-                                        .Add($"/p:ExcludeByAttribute=\\\"Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute\\\"")
                                         // This is required for the .NET Framework tests, otherwise strong named assemblies would not be correctly
                                         // found since Coverlet changes them in order to be able to generate a coverage result
                                         .Add("-- RunConfiguration.DisableAppDomain=true")))
@@ -148,7 +148,7 @@ class Build : NukeBuild
             // picked up by Jenkins
             ReportGenerator(c => c
                 .SetFramework("net5.0")
-                .SetReports(OutputDirectory / "*_coverage.*.xml")
+                .SetReports(OutputDirectory / "**/*cobertura.xml")
                 .SetTargetDirectory(OutputDirectory)
                 .SetReportTypes(ReportTypes.Cobertura));
 
