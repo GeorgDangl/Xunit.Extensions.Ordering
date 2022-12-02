@@ -2,6 +2,10 @@
 
 All notable changes to **Dangl.Xunit.Extensions.Ordering** are documented here.
 
+## v2.2.0:
+- Dropped tests for .NET 5 and added tests for .NET 7
+- Updated to latest xUnit dependencies
+
 ## v2.1.0:
 - Added a new test framework `Xunit.Extensions.Ordering.ParallelByClassTestFramework`. This has the same behaviour as the original one, but parallelizes all tests inside single classes as well. It respects explicit `Collection` attributes, but otherwise places each single test in a collection of it's own for maximized parallelization
 
