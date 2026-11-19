@@ -2,6 +2,9 @@
 
 All notable changes to **Dangl.Xunit.Extensions.Ordering** are documented here.
 
+## v2.2.1:
+- **Dangl.Xunit.Extensions.Ordering** now also produces Markdown documentation. This can be easily accessed by AI agents via the MCP server implementation in **Dangl**Docu.
+
 ## v2.2.0:
 - Dropped tests for .NET 5 and added tests for .NET 7
 - Updated to latest xUnit dependencies
