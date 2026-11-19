@@ -1,27 +1,23 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
+    <RollForward>Major</RollForward>
     <RootNamespace></RootNamespace>
     <NoWarn>CS0649;CS0169</NoWarn>
-    <NukeRootDirectory>..</NukeRootDirectory>
-    <NukeScriptDirectory>..</NukeScriptDirectory>
-    <NukeTelemetryVersion>1</NukeTelemetryVersion>
+    <FalloutRootDirectory>..</FalloutRootDirectory>
+    <FalloutScriptDirectory>..</FalloutScriptDirectory>
+    <FalloutTelemetryVersion>1</FalloutTelemetryVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ReverseMarkdown" Version="4.6.0" />
-    <PackageReference Include="Nuke.Common" Version="6.2.1" />
-    <PackageDownload Include="GitVersion.Tool" Version="[5.11.1]" />
-    <PackageReference Include="Nuke.GitHub" Version="3.0.0" />
+    <PackageReference Include="Fallout.Common" Version="10.5.0" />
+    <PackageDownload Include="GitVersion.Tool" Version="[5.12.0]" />
+    <PackageReference Include="Dangl.Fallout.GitHub" Version="8.0.1" />
     <PackageReference Include="ReportGenerator" Version="5.1.12" />
-    <PackageReference Include="Nuke.WebDocu" Version="4.0.1" />
-    <PackageReference Include="docfx.console" Version="2.59.4">
-      <ExcludeAssets>build</ExcludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Dangl.Fallout.WebDocu" Version="8.0.1" />
+    <PackageDownload Include="docfx" Version="[2.78.5]" />
   </ItemGroup>
 
 </Project>

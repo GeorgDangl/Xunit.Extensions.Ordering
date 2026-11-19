@@ -9,6 +9,22 @@
         }
       ],
       "dest": "./code"
+    },
+    {
+      "src": [
+        {
+          "src": "../Xunit.Extensions.Ordering",
+          "files": [
+            "**/**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**"
+          ]
+        }
+      ],
+      "dest": "../output/docs-markdown/code",
+      "outputFormat": "markdown"
     }
   ],
   "build": {
