@@ -365,6 +365,9 @@ class Build : NukeBuild
                 .SetProjects(DocFxFile));
         });
 
+    Target TestMarkdownDocumentation => _ => _
+        .Executes(() => MarkdownDocumentationTests.Run(OutputDirectory / "markdown-tests"));
+
     Target BuildDocumentation => _ => _
         .DependsOn(Clean)
         .DependsOn(BuildDocFxMetadata)
@@ -377,6 +380,9 @@ class Build : NukeBuild
                 .SetConfigFile(DocFxFile));
             DeleteFile(DocsDirectory / "CHANGELOG.md");
             DeleteFile(DocsDirectory / "index.md");
+
+            MarkdownDocumentation.Build(RootDirectory, OutputDirectory / "docs",
+                OutputDirectory / "docs-markdown", requireApi: true);
         });
 
     Target UploadDocumentation => _ => _
@@ -388,13 +394,16 @@ class Build : NukeBuild
         {
             var changeLog = GetCompleteChangeLog(ChangeLogFile);
 
-            WebDocu(s => s
-                .SetDocuBaseUrl(DocuBaseUrl)
-                .SetDocuApiKey(DocuApiKey)
-                .SetMarkdownChangelog(changeLog)
-                .SetSourceDirectory(OutputDirectory / "docs")
-                .SetVersion(GitVersion.NuGetVersion)
-                .SetSkipForVersionConflicts(true));
+            MarkdownDocumentation.Publish(DocuBaseUrl, DocuApiKey, GitVersion.NuGetVersion,
+                OutputDirectory / "docs-markdown.zip",
+                () => WebDocu(s => s
+                    .SetDocuBaseUrl(DocuBaseUrl)
+                    .SetDocuApiKey(DocuApiKey)
+                    .SetMarkdownChangelog(changeLog)
+                    .SetSourceDirectory(OutputDirectory / "docs")
+                    .SetVersion(GitVersion.NuGetVersion)
+                    .SetSkipForVersionConflicts(false)),
+                skipForVersionConflicts: true);
         });
 
     private bool IsOnBranch(string branchName)

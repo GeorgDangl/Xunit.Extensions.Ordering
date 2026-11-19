@@ -259,3 +259,22 @@ public class AsmFixture : IAsyncLifetime
 I cannot split this functionality into two packages bcs. I need own TestFramework for ordering puposes. AssemblyFixtures are often used side by side with ordering. 
 
 *Kick started by [Xunit example](https://github.com/xunit/samples.xunit/tree/master/AssemblyFixtureExample) by Brad Wilson. I've presered his original comments where it was applicable.*
+
+
+## Markdown documentation publishing
+
+`BuildDocumentation` also generates `output/docs-markdown` and `output/docs-markdown.zip`.
+Start with `index.md` (the source README), or `toc.md` for all articles and API pages.
+Changelog/license text and linked documentation assets are included; the ZIP has no
+enclosing directory.
+
+The Markdown renderer converts the existing published DocFX article HTML, including
+API signatures, code examples and anchors. This keeps the current documentation
+toolchain and public project boundaries intact, without requiring newer DocFX or
+migrating the legacy NUKE build. It does not modify documentation sources.
+
+`UploadDocumentation` uploads HTML first, then sends the Markdown ZIP to
+`/API/MarkdownDocuments/Upload` with the same API key and exact version. Generation
+or upload errors fail publishing; existing branch gates and version-conflict policies
+are preserved. `TestMarkdownDocumentation` exercises packaging, links, assets,
+failure handling and the multipart contract using only a local HTTP server.
